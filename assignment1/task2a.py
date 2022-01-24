@@ -12,8 +12,17 @@ def pre_process_images(X: np.ndarray):
     """
     assert X.shape[1] == 784,\
         f"X.shape[1]: {X.shape[1]}, should be 784"
+
     # TODO implement this function (Task 2a)
-    return X
+    # Add bias to each row - The Bias Trick
+    bias = np.array([1])
+    X_temp = np.tile(bias[np.newaxis, :], (X.shape[0], 1))
+    X_bias = np.concatenate((X, X_temp), axis=1)
+
+    # Normalize to [-1, 1]
+    X_bias_norm = 2.*(X_bias - np.min(X_bias)) / np.ptp(X_bias) - 1
+    print(X_bias_norm)
+    return X_bias_norm
 
 
 def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
@@ -34,7 +43,7 @@ class BinaryModel:
 
     def __init__(self):
         # Define number of input nodes
-        self.I = None
+        self.I = 784  # None ?
         self.w = np.zeros((self.I, 1))
         self.grad = None
 
@@ -46,7 +55,10 @@ class BinaryModel:
             y: output of model with shape [batch size, 1]
         """
         # TODO implement this function (Task 2a)
-        return None
+        # (n = I, k=1) @ (k=batch_size, m=785) = (n=batch size, m=1)
+        z = self.w.T @ X  # or np.dot?
+        y = 1.0/(1.0+np.exp(-z))
+        return y
 
     def backward(self, X: np.ndarray, outputs: np.ndarray, targets: np.ndarray) -> None:
         """
