@@ -14,14 +14,15 @@ def pre_process_images(X: np.ndarray):
         f"X.shape[1]: {X.shape[1]}, should be 784"
 
     # TODO implement this function (Task 2a)
-    # Add bias to each row - The Bias Trick
+    # The Bias Trick
     bias = np.array([1])
+
+    # Add new column with bias
     X_temp = np.tile(bias[np.newaxis, :], (X.shape[0], 1))
     X_bias = np.concatenate((X, X_temp), axis=1)
 
-    # Normalize to [-1, 1]
-    X_bias_norm = 2.*(X_bias - np.min(X_bias)) / np.ptp(X_bias) - 1
-    print(X_bias_norm)
+    # Normalize X to be between [-1, 1]
+    X_bias_norm = 2.*(X_bias - np.min(X_bias)) / np.ptp(X_bias) - 1  # Multiplied by 2 to make it from [0,1] -> [0,2] then substrak 1 to make it [-1, 1]
     return X_bias_norm
 
 
@@ -43,7 +44,7 @@ class BinaryModel:
 
     def __init__(self):
         # Define number of input nodes
-        self.I = 784  # None ?
+        self.I = 784+1  # 784 input nodes and one bias
         self.w = np.zeros((self.I, 1))
         self.grad = None
 
@@ -55,10 +56,9 @@ class BinaryModel:
             y: output of model with shape [batch size, 1]
         """
         # TODO implement this function (Task 2a)
-        # (n = I, k=1) @ (k=batch_size, m=785) = (n=batch size, m=1)
-        z = self.w.T @ X  # or np.dot?
+        z = np.dot(self.w.T, X.T) # do we need np.sum() of this as well?
         y = 1.0/(1.0+np.exp(-z))
-        return y
+        return y.T
 
     def backward(self, X: np.ndarray, outputs: np.ndarray, targets: np.ndarray) -> None:
         """
