@@ -37,7 +37,8 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
     # TODO implement this function (Task 2a)
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
-    return 0
+    cross_entropy_error = -(np.dot(targets.T, np.log(outputs)) + np.dot((1 - targets.T), np.log(1 - outputs)))
+    return np.average(cross_entropy_error)
 
 
 class BinaryModel:
@@ -74,6 +75,7 @@ class BinaryModel:
         self.grad = np.zeros_like(self.w)
         assert self.grad.shape == self.w.shape,\
             f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
+        self.grad = np.dot(-(targets.T - outputs.T), X)  # Something like this?
 
     def zero_grad(self) -> None:
         self.grad = None
