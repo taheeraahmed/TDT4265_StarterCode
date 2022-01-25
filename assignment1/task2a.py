@@ -14,16 +14,15 @@ def pre_process_images(X: np.ndarray):
         f"X.shape[1]: {X.shape[1]}, should be 784"
 
     # TODO implement this function (Task 2a)
-    # The Bias Trick
-    bias = np.array([1])
 
-    # Add new column with bias
-    X_temp = np.tile(bias[np.newaxis, :], (X.shape[0], 1))
-    X_bias = np.concatenate((X, X_temp), axis=1)
+    # Add bias
+    x_vector = np.ones((X.shape[0], 1))
+    X = np.concatenate((X, x_vector), axis=1)
 
-    # Normalize X to be between [-1, 1]
-    X_bias_norm = 2.*(X_bias - np.min(X_bias)) / np.ptp(X_bias) - 1  # Multiplied by 2 to make it from [0,1] -> [0,2] then substrak 1 to make it [-1, 1]
-    return X_bias_norm
+    # Normalize to [-1, 1]
+    X = X / 127.5 - 1
+
+    return X
 
 
 def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
@@ -37,8 +36,10 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
     # TODO implement this function (Task 2a)
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
-    cross_entropy_error = -(np.dot(targets.T, np.log(outputs)) + np.dot((1 - targets.T), np.log(1 - outputs)))
-    return np.average(cross_entropy_error)
+
+    cross_entropy_error = -(targets * np.log(outputs)) + (1 - targets) * np.log(1 - outputs)
+    #cross_entropy_error = -(np.dot(targets, np.log(outputs)) + np.dot((1 - targets), np.log(1 - outputs)))
+    return cross_entropy_error.mean()
 
 
 class BinaryModel:
@@ -57,7 +58,7 @@ class BinaryModel:
             y: output of model with shape [batch size, 1]
         """
         # TODO implement this function (Task 2a)
-        z = np.dot(self.w.T, X.T) # do we need np.sum() of this as well?
+        z = np.dot(self.w.T, X.T)
         y = 1.0/(1.0+np.exp(-z))
         return y.T
 
@@ -75,7 +76,8 @@ class BinaryModel:
         self.grad = np.zeros_like(self.w)
         assert self.grad.shape == self.w.shape,\
             f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
-        self.grad = np.dot(-(targets.T - outputs.T), X)  # Something like this?
+
+        self.grad = -(targets - outputs) * X
 
     def zero_grad(self) -> None:
         self.grad = None
