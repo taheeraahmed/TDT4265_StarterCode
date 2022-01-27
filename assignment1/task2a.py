@@ -37,8 +37,7 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
 
-    cross_entropy_error = -(targets * np.log(outputs)) + (1 - targets) * np.log(1 - outputs)
-    #cross_entropy_error = -(np.dot(targets, np.log(outputs)) + np.dot((1 - targets), np.log(1 - outputs)))
+    cross_entropy_error = -(targets * np.log(outputs) + (1 - targets) * np.log(1 - outputs))
     return cross_entropy_error.mean()
 
 
@@ -77,7 +76,20 @@ class BinaryModel:
         assert self.grad.shape == self.w.shape,\
             f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
 
-        self.grad = -(targets - outputs) * X
+        # every node shall have one gradient
+        # this gradient shall be updated for each image
+
+        # X shape (100, 785)
+        # self.grad shape (785, 1)
+        # outputs shape (100, 1)
+        # targets shape (100, 1)
+
+        # Add the gradient for each node for all images
+        self.grad += np.dot((-(targets.T - outputs.T)), X).T
+
+        # Take the mean of the gradient for each node
+        batch_size = X.shape[0]
+        self.grad = np.divide(self.grad, batch_size)
 
     def zero_grad(self) -> None:
         self.grad = None
